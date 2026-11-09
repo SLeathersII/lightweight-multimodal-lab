@@ -4,7 +4,7 @@ import zipfile
 import urllib.request
 
 CLEVR_URL = "https://dl.fbaipublicfiles.com/clevr/CLEVR_v1.0.zip"
-DATA_DIR = os.path.join(os.path.dirname(__file__), "../../../data")
+DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../data"))
 
 def download_and_extract_clevr():
     os.makedirs(DATA_DIR, exist_ok=True)

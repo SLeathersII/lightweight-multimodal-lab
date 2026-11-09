@@ -25,3 +25,26 @@ class FidelityEvaluator:
     def spatial_alignment_mse(pred_layout: torch.Tensor, target_layout: torch.Tensor) -> torch.Tensor:
         """Evaluates spatial bounding box / coordinate alignment accuracy."""
         return torch.mean((pred_layout - target_layout) ** 2)
+
+class ModalityDiscrepancyEvaluator:
+    """Probes failure modes in one modality that are absent in another."""
+
+    @staticmethod
+    def corrupt_3d_point_cloud(pc: torch.Tensor, drop_ratio: float = 0.75) -> torch.Tensor:
+        """Simulates sensor sparsity / LiDAR beam drop out."""
+        B, N, C = pc.shape
+        keep_count = int(N * (1.0 - drop_ratio))
+        indices = torch.randperm(N)[:keep_count]
+        sparse_pc = pc[:, indices, :]
+        # Pad back to shape for standard metric calculation
+        padding = torch.zeros(B, N - keep_count, C, device=pc.device)
+        return torch.cat([sparse_pc, padding], dim=1)
+
+    @staticmethod
+    def corrupt_rgb_occlusion(img: torch.Tensor, mask_ratio: float = 0.50) -> torch.Tensor:
+        """Simulates camera lens blinding / visual occlusion."""
+        masked_img = img.clone()
+        _, _, H, W = img.shape
+        mask_w = int(W * mask_ratio)
+        masked_img[:, :, :, :mask_w] = 0.0  # Zero out left half of image
+        return masked_img

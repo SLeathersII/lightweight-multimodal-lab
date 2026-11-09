@@ -41,3 +41,42 @@ class LightweightMultiModalDiT(nn.Module):
             h = block(h)
 
         return self.out_proj(h)
+
+
+class LightweightLatentDiT(nn.Module):
+    """
+    Stage 2: DiT operating on 3D latent tokens z_3D conditioned on z_RGB tokens.
+    Estimates p_theta(z_3D | z_RGB) via score-matching.
+    """
+
+    def __init__(self, z_3d_dim: int = 128, z_rgb_dim: int = 256, embed_dim: int = 128, depth: int = 4):
+        super().__init__()
+        self.z3d_proj = nn.Linear(z_3d_dim, embed_dim)
+        self.zrgb_proj = nn.Linear(z_rgb_dim, embed_dim)
+        self.time_proj = nn.Sequential(
+            nn.Linear(1, embed_dim),
+            nn.SiLU(),
+            nn.Linear(embed_dim, embed_dim)
+        )
+
+        self.blocks = nn.ModuleList([
+            nn.TransformerEncoderLayer(
+                d_model=embed_dim, nhead=4, dim_feedforward=embed_dim * 2,
+                batch_first=True, activation="gelu"
+            ) for _ in range(depth)
+        ])
+        self.out_proj = nn.Linear(embed_dim, z_3d_dim)
+
+    def forward(self, z_3d_noisy: torch.Tensor, t: torch.Tensor, z_rgb_cond: torch.Tensor) -> torch.Tensor:
+        # Inputs: z_3d_noisy [B, Dim], z_rgb_cond [B, Dim]
+        h_3d = self.z3d_proj(z_3d_noisy).unsqueeze(1)
+        h_rgb = self.zrgb_proj(z_rgb_cond).unsqueeze(1)
+        t_emb = self.time_proj(t.unsqueeze(-1).float()).unsqueeze(1)
+
+        # Concatenate tokens sequence: [B, 3, Embed_Dim]
+        seq = torch.cat([h_3d + t_emb, h_rgb], dim=1)
+
+        for block in self.blocks:
+            seq = block(seq)
+
+        return self.out_proj(seq[:, 0, :])

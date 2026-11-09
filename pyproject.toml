@@ -7,10 +7,12 @@ description = "Investigative suite for lightweight multi-modal diffusion & compr
 requires-python = ">=3.11, <3.14"
 dependencies = [
     "torch>=2.2.0",
+    "torchvision",
     "numpy>=1.24.0",
     "psutil>=5.9.0",
     "matplotlib>=3.7.0",
-    "tqdm>=4.65.0"
+    "tqdm>=4.65.0",
+    "ipykernel>=6.0.0"
 ]
 authors = [
     { name = "SLeathersII", email = "85975704+SLeathersII@users.noreply.github.com" }]
@@ -26,6 +28,7 @@ build-backend = "uv_build"
 core-engine = { workspace = true }
 diagnostics = { workspace = true }
 torch = { index = "pytorch-cu128" }
+torchvision = {index = "pytorch-cu128"}
 
 [tool.uv.workspace]
 members = ["packages/*"]
