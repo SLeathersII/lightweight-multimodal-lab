@@ -1,0 +1,36 @@
+
+
+[project]
+name = "lightweight-multimodal-lab"
+version = "0.1.0"
+description = "Investigative suite for lightweight multi-modal diffusion & compression"
+requires-python = ">=3.11, <3.14"
+dependencies = [
+    "torch>=2.2.0",
+    "numpy>=1.24.0",
+    "psutil>=5.9.0",
+    "matplotlib>=3.7.0",
+    "tqdm>=4.65.0"
+]
+authors = [
+    { name = "SLeathersII", email = "85975704+SLeathersII@users.noreply.github.com" }]
+
+[project.scripts]
+lightweight-multimodal-lab = "lightweight_multimodal_lab:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+core-engine = { workspace = true }
+diagnostics = { workspace = true }
+torch = { index = "pytorch-cu128" }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
